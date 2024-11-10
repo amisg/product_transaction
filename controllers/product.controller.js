@@ -1,9 +1,12 @@
 const {
 	fetchAndSeedDatabase,
 	getTransactions,
+	getMonthlyStatistics,
+	getBarChartData,
+	getPieChartData,
+	getCombinedData,
 } = require("../services/product.service");
 
-// controller to add / seed the documents in database
 async function initializeDatabase(req, res) {
 	try {
 		const { status, message } = await fetchAndSeedDatabase();
@@ -15,16 +18,14 @@ async function initializeDatabase(req, res) {
 	}
 }
 
-// controller to list transactions
 async function listTransactions(req, res) {
 	try {
-		// Extract query parameters
 		const { page = 1, perPage = 10, search = "", month } = req.query;
 
-		// Call the service to fetch the transactions
 		const result = await getTransactions({ page, perPage, search, month });
 
-		// Send response with transactions and pagination data
+		// console.log(result);
+
 		res.status(200).json(result);
 	} catch (error) {
 		res.status(500).json({
@@ -34,7 +35,74 @@ async function listTransactions(req, res) {
 	}
 }
 
+async function getStatistics(req, res) {
+	const { month } = req.query;
+
+	try {
+		if (!month) {
+			return res.status(400).json({ message: "Month parameter is required" });
+		}
+
+		const statistics = await getMonthlyStatistics(month);
+
+		return res.status(200).json(statistics);
+	} catch (error) {
+		return res
+			.status(500)
+			.json({ message: "Error fetching statistics: " + error.message });
+	}
+}
+
+async function getBarChart(req, res) {
+	try {
+		const { month } = req.query;
+
+		if (!month) {
+			return res.status(400).json({ message: "Month parameter is required." });
+		}
+
+		const barChartData = await getBarChartData(month);
+		res.status(200).json(barChartData);
+	} catch (error) {
+		res
+			.status(500)
+			.json({ message: "Error fetching bar chart data: " + error.message });
+	}
+}
+
+async function getPieChart(req, res) {
+	try {
+		const { month } = req.query;
+
+		if (!month) {
+			return res.status(400).json({ message: "Month parameter is required." });
+		}
+
+		const barChartData = await getPieChartData(month);
+		res.status(200).json(barChartData);
+	} catch (error) {
+		res
+			.status(500)
+			.json({ message: "Error fetching bar chart data: " + error.message });
+	}
+}
+
+async function combinedData(req, res) {
+	try {
+		const combinedData = await getCombinedData(req, res);
+		res.status(200).json(combinedData);
+	} catch (error) {
+		res
+			.status(500)
+			.json({ message: "Error fetching bar chart data: " + error.message });
+	}
+}
+
 module.exports = {
 	initializeDatabase,
 	listTransactions,
+	getStatistics,
+	getBarChart,
+	getPieChart,
+	combinedData,
 };
